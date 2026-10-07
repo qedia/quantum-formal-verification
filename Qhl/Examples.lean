@@ -1,0 +1,35 @@
+import Qhl
+import Qhl.Examples.BKTransformTriple
+import Qhl.Examples.Bell
+import Qhl.Examples.BellStateTriple
+import Qhl.Examples.BoundedRUSTriple
+import Qhl.Examples.ClusterStateTriple
+import Qhl.Examples.Example42
+import Qhl.Examples.HubbardLCUSuccess
+import Qhl.Examples.HubbardLCUTriple
+import Qhl.Examples.HubbardQSPSuccess
+import Qhl.Examples.HubbardQSPTriple
+import Qhl.Examples.InverseQFTClassicalTriple
+import Qhl.Examples.InverseQFTTriple
+import Qhl.Examples.MeasureLoop
+import Qhl.Examples.MeasureLoopTriple
+import Qhl.Examples.ParallelHadamard
+import Qhl.Examples.ParallelHadamardForTriple
+import Qhl.Examples.ParallelHadamardTriple
+import Qhl.Examples.QFTArbitrary
+import Qhl.Examples.QFTClassicalTriple
+import Qhl.Examples.QFTComplete
+import Qhl.Examples.QFTTriple
+import Qhl.Examples.QFTUniform
+import Qhl.Examples.QPEApproxSuccess
+import Qhl.Examples.QPEApproxTriple
+import Qhl.Examples.QPEClassicalTriple
+import Qhl.Examples.QPETriple
+import Qhl.Examples.RUSTriple
+import Qhl.Examples.RUSZeroBound
+import Qhl.Examples.TrotterIsingTriple
+import Qhl.Examples.TrotterTFIMClassicalTriple
+import Qhl.Examples.TrotterTFIMTriple
+import Qhl.Examples.TrotterZTriple
+
+/-! Verified quantum-program examples. -/

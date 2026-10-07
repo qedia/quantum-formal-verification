@@ -1,0 +1,20 @@
+# Lean dependencies and build outputs
+.lake/
+*.olean
+*.ilean
+*.olean.private
+*.olean.server
+
+# Local diagnostics and editor files
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+
+# Local credentials and environment configuration
+.env
+.env.*
+*.pem
+*.key
