@@ -57,8 +57,10 @@ private def principalSourceRoots : List (Name × Bool) :=
    ( ``Qhl.BKTransform.bkSourceDeriv, true),
    ( ``Qhl.HubbardLCU.Source.lcuDeriv, true),
    ( ``Qhl.HubbardLCUSuccess.Source.lcuSuccessDeriv, true),
+   ( ``Qhl.HubbardLCUPredicate.lcuPredicateDeriv, true),
    ( ``Qhl.HubbardQSP.Source.qspDeriv, true),
-   ( ``Qhl.HubbardQSPSuccess.Source.qspFidelityDeriv, true)]
+   ( ``Qhl.HubbardQSPSuccess.Source.qspFidelityDeriv, true),
+   ( ``Qhl.HubbardQSPPredicates.deriv, true)]
 
 private def reusedSourceRoots : List Name :=
   [``Qhl.ParallelHadamardSource.phDerivOnWith,

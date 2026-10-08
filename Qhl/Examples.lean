@@ -6,8 +6,10 @@ import Qhl.Examples.BoundedRUSTriple
 import Qhl.Examples.ClusterStateTriple
 import Qhl.Examples.Example42
 import Qhl.Examples.HubbardLCUSuccess
+import Qhl.Examples.HubbardLCUPredicate
 import Qhl.Examples.HubbardLCUTriple
 import Qhl.Examples.HubbardQSPSuccess
+import Qhl.Examples.HubbardQSPPredicates
 import Qhl.Examples.HubbardQSPTriple
 import Qhl.Examples.InverseQFTClassicalTriple
 import Qhl.Examples.InverseQFTTriple
