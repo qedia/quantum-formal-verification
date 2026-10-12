@@ -27,7 +27,7 @@ private def sourceRoots : List Name :=
    ``Qhl.SourceDerivTot.initFiniteBlock,
    ``Qhl.SourceDerivTot.initDynamicBlock]
 
--- Each entry corresponds to one of the 29 original principal results.
+-- Principal source results, including the retained and extended example specifications.
 -- The quantitative RUS entry includes zero retries through its all-bound theorem.
 private def principalSourceRoots : List (Name × Bool) :=
   [( ``Qhl.BellProgram.bellSourceDeriv, false),
@@ -55,12 +55,21 @@ private def principalSourceRoots : List (Name × Bool) :=
    ( ``Qhl.TrotterTFIMClassical.identitySourceDeriv, true),
    ( ``Qhl.TrotterTFIMClassical.approxSourceDeriv, true),
    ( ``Qhl.BKTransform.bkSourceDeriv, true),
+   ( ``Qhl.BKTransform.bkCoherentSourceDeriv, true),
    ( ``Qhl.HubbardLCU.Source.lcuDeriv, true),
    ( ``Qhl.HubbardLCUSuccess.Source.lcuSuccessDeriv, true),
    ( ``Qhl.HubbardLCUPredicate.lcuPredicateDeriv, true),
    ( ``Qhl.HubbardQSP.Source.qspDeriv, true),
    ( ``Qhl.HubbardQSPSuccess.Source.qspFidelityDeriv, true),
-   ( ``Qhl.HubbardQSPPredicates.deriv, true)]
+   ( ``Qhl.HubbardQSPPredicates.deriv, true),
+   ( ``Qhl.HubbardQSPBK.deriv, true),
+   ( ``Qhl.HubbardQSPBK.derivUnder, true),
+   ( ``Qhl.HubbardQSPBK.stateCircuitDeriv, true),
+   ( ``Qhl.HubbardQSPBK.stateDeriv, true),
+   ( ``Qhl.HubbardLCUFullPredicate.deriv, true),
+   ( ``Qhl.HubbardQSPFullPredicate.deriv, true),
+   ( ``Qhl.HubbardQSPFullPredicate.bkDeriv, true),
+   ( ``Qhl.HubbardQSPSpectral.deriv_of_norm_lt, true)]
 
 private def reusedSourceRoots : List Name :=
   [``Qhl.ParallelHadamardSource.phDerivOnWith,
@@ -168,6 +177,14 @@ run_cmd do
     for n in [ph, iqft] do
       unless deps.contains n do throwError "{root}: missing source subroutine {n}"
   logInfo "PASS both QPE proofs reuse source Hadamard and placed inverse-QFT proofs"
+  for (root, qsp) in
+      [(``Qhl.HubbardQSPBK.deriv, ``Qhl.HubbardQSPPredicates.circuit),
+       (``Qhl.HubbardQSPBK.stateCircuitDeriv, ``Qhl.HubbardQSP.Source.qspDeriv),
+       (``Qhl.HubbardQSPBK.stateDeriv, ``Qhl.HubbardQSP.Source.qspDeriv)] do
+    let deps := dependencies env [root] {}
+    for n in [``Qhl.BKTransformWp.sourceDeriv, qsp] do
+      unless deps.contains n do throwError "{root}: missing source BK/QSP subroutine {n}"
+  logInfo "PASS BK-prefixed QSP proofs reuse the literal source BK and QSP derivations"
   let backend := dependencies env [``Qhl.BellProgram.bellStateDeriv] {}
   unless backend.contains ``Qhl.DerivTot.unitary do
     throwError "negative control failed: backend constructor not detected"

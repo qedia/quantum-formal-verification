@@ -58,5 +58,6 @@ import Qhl.SuperOp.Choi
 import Qhl.SuperOp.LiftSO
 import Qhl.SuperOp.Ptrace
 import Qhl.SuperOp.Tenso
+import Qhl.HSpace.SpectralNorm
 
 /-! Quantum mathematics, gates, and arrays, without program logic or examples. -/

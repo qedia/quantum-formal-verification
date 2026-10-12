@@ -6,6 +6,8 @@ import Qhl.Logic.Frame
 import Qhl.Gate.Phase
 import Qhl.Register.Qubits
 import Qhl.Register.BravyiKitaev
+import Qhl.Register.BKSets
+import Qhl.Logic.WpChain
 
 /-!
 # The Bravyi–Kitaev basis change, as a total-correctness triple
@@ -635,3 +637,185 @@ end Qhl.BKTransform
 
 #print axioms Qhl.BKTransform.bkSourceDeriv
 #print axioms Qhl.BKTransform.bkSourceValid
+
+
+/-! Coherent correctness for every normalized input, with the original program. -/
+namespace Qhl.BKTransform
+open Finset BravyiKitaev
+
+noncomputable def rungOp (x l k : ℕ) : EndM (QubitD (2 ^ x)) univ :=
+  if h : liveG x l k then
+    regLift ⟨regE x (l,k), distE_of_live x h⟩ (gateE x (l,k)) else 1
+
+noncomputable def midOp (x l : ℕ) : ℕ → EndM (QubitD (2 ^ x)) univ
+  | 0 => 1
+  | k + 1 => rungOp x l k ∘ₗ midOp x l k
+
+noncomputable def levelOp (x l : ℕ) := midOp x l (2 ^ x)
+noncomputable def atOp (x : ℕ) : ℕ → EndM (QubitD (2 ^ x)) univ
+  | 0 => 1
+  | l + 1 => levelOp x l ∘ₗ atOp x l
+noncomputable def bkCircuitOp (x : ℕ) := atOp x x
+
+theorem rungOp_unitary (x l k : ℕ) : IsUnitary (rungOp x l k) := by
+  unfold rungOp
+  split
+  · exact isUnitary_regLift _ _
+  · exact isUnitary_one
+
+theorem midOp_unitary (x l k : ℕ) : IsUnitary (midOp x l k) := by
+  induction k with
+  | zero => exact isUnitary_one
+  | succ k ih => exact (rungOp_unitary x l k).comp ih
+
+theorem atOp_unitary (x l : ℕ) : IsUnitary (atOp x l) := by
+  induction l with
+  | zero => exact isUnitary_one
+  | succ l ih => exact (midOp_unitary x l (2 ^ x)).comp ih
+
+def basisBitsEquiv (x : ℕ) :
+    (↥(univ : Finset (QubitL (2 ^ x))) → Bool) ≃ (Fin (2 ^ x) → Bool) where
+  toFun f i := f ⟨i, mem_univ i⟩
+  invFun f i := f i.val
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+/-- The independent BK basis permutation. -/
+noncomputable def bkUnitary (x : ℕ) : UnitaryOp (HS (QubitD (2 ^ x)) univ) :=
+  permOp ((basisBitsEquiv x).trans ((bkEquiv x).trans (basisBitsEquiv x).symm))
+
+theorem bkUnitary_basis (x : ℕ) (f : Fin (2 ^ x) → Bool) :
+    (bkUnitary x : EndM (QubitD (2 ^ x)) univ) (ψIn x f) = ψOut x f := by
+  change (bkUnitary x : EndM (QubitD (2 ^ x)) univ)
+    (prodV (QubitD (2 ^ x)) (fun i => qbit (f i))) =
+    prodV (QubitD (2 ^ x)) (fun i => qbit (bkVec x f i))
+  rw [prodV_qbit_eq_deltav, prodV_qbit_eq_deltav]
+  exact permOp_single _ _ _
+
+theorem rungOp_step (x : ℕ) (f : Fin (2 ^ x) → Bool) (l k : ℕ) :
+    rungOp x l k (ψMid x f l k) = ψMid x f l (k + 1) := by
+  unfold rungOp
+  split
+  · rename_i h
+    rw [regLift_regE_of_live x h]
+    exact K_step x f h
+  · rename_i h
+    exact (ψMid_succ_dead x f h).symm
+
+theorem midOp_basis (x : ℕ) (f : Fin (2 ^ x) → Bool) (l k : ℕ) :
+    midOp x l k (ψAt x f l) = ψMid x f l k := by
+  induction k with
+  | zero => rfl
+  | succ k ih => rw [midOp, LinearMap.comp_apply, ih, rungOp_step]
+
+theorem atOp_basis (x : ℕ) (f : Fin (2 ^ x) → Bool) (l : ℕ) :
+    atOp x l (ψIn x f) = ψAt x f l := by
+  induction l with
+  | zero => exact (ψAt_zero x f).symm
+  | succ l ih => rw [atOp, LinearMap.comp_apply, ih, levelOp, midOp_basis, ψMid_top]
+
+theorem bkCircuitOp_eq_bkUnitary (x : ℕ) :
+    bkCircuitOp x = (bkUnitary x : EndM (QubitD (2 ^ x)) univ) := by
+  apply linM_ext (QubitD (2 ^ x))
+  intro f
+  have h := atOp_basis x (fun i => f ⟨i, mem_univ i⟩) x
+  rw [ψAt_of_ge x _ (Nat.le_refl x)] at h
+  rw [bkCircuitOp, ← prodV_qbit_eq_deltav x (fun i => f ⟨i, mem_univ i⟩)]
+  exact h.trans (bkUnitary_basis x _).symm
+
+end Qhl.BKTransform
+
+namespace Qhl.BKTransform
+open Finset BravyiKitaev
+variable (x : ℕ) (ψ : HS (QubitD (2 ^ x)) univ) (hψ : ‖ψ‖ = 1)
+
+noncomputable def coherentAt (l : ℕ) := atOp x l ψ
+noncomputable def coherentMid (l k : ℕ) := midOp x l k (coherentAt x ψ l)
+include hψ in
+theorem norm_coherentAt (l : ℕ) : ‖coherentAt x ψ l‖ = 1 :=
+  norm_eq_one_of_isUnitary (atOp_unitary x l) hψ
+include hψ in
+theorem norm_coherentMid (l k : ℕ) : ‖coherentMid x ψ l k‖ = 1 :=
+  norm_eq_one_of_isUnitary (midOp_unitary x l k) (norm_coherentAt x ψ hψ l)
+
+theorem coherent_levelSource (φ : ℕ → Prop) :
+    SourceDerivTot
+      (SourceAssertion.ofAssn (Assn.ofStateFam (fun σ : ℕ × ℕ => coherentAt x ψ σ.1)
+        (fun σ => norm_coherentAt x ψ hψ σ.1)) (fun σ => φ σ.1))
+      (levelProg x)
+      (SourceAssertion.ofAssn (Assn.ofStateFam (fun σ : ℕ × ℕ => coherentAt x ψ (σ.1 + 1))
+        (fun σ => norm_coherentAt x ψ hψ (σ.1 + 1))) (fun σ => φ σ.1)) := by
+  apply SourceDerivTot.countedStateChainVar (CounterLens.snd ℕ) (fun _ => 2 ^ x)
+    (fun σ => φ σ.1) (fun _ _ => Iff.rfl) (fun _ _ => rfl)
+    (fun k σ => coherentMid x ψ σ.1 k) (fun k σ => norm_coherentMid x ψ hψ σ.1 k)
+    (fun _ _ _ => rfl) (fun _ _ => rfl) (fun _ _ => rfl)
+  · apply SourceDerivTot.cond
+    · refine .conseq (SourceAssertion.entails_refl _)
+        (SourceDerivTot.countedRung_fam (regE x) (gateE x)
+          (fun σ => norm_coherentMid x ψ hψ σ.1 σ.2)
+          (fun σ => norm_coherentMid x ψ hψ σ.1 (σ.2 + 1)) ?_) ?_
+      · intro σ hσ
+        have hlive : liveG x σ.1 σ.2 := of_decide_eq_true hσ.2
+        refine ⟨distE_of_live x hlive, ?_⟩
+        change _ = rungOp x σ.1 σ.2 (coherentMid x ψ σ.1 σ.2)
+        rw [rungOp, dif_pos hlive]
+      · exact SourceAssertion.entails_ofAssn _ _ _ _
+          (fun _ h => h.1) (fun _ _ => le_rfl)
+    · refine .conseq ?_ (.skip _) (SourceAssertion.entails_refl _)
+      apply SourceAssertion.entails_ofAssn _ _ _ _ (fun _ h => h.1)
+      intro σ hσ
+      have hdead : ¬ liveG x σ.1 σ.2 := of_decide_eq_false hσ.2
+      have heq : coherentMid x ψ σ.1 (σ.2 + 1) = coherentMid x ψ σ.1 σ.2 := by
+        simp only [coherentMid, midOp, LinearMap.comp_apply, rungOp, dif_neg hdead,
+          Module.End.one_apply]
+      change outerLM (coherentMid x ψ σ.1 σ.2) (coherentMid x ψ σ.1 σ.2) ≤
+        outerLM (coherentMid x ψ σ.1 (σ.2 + 1)) (coherentMid x ψ σ.1 (σ.2 + 1))
+      rw [heq]
+  · intro z
+    exact rungIdentitySource x _
+
+/-- Source total correctness on every normalized coherent input. -/
+theorem bkCoherentSourceDeriv :
+    SourceDerivTot
+      (SourceAssertion.ofAssn (Assn.ofState ψ hψ) (fun _ : ℕ × ℕ => True)) (bkProg x)
+      (SourceAssertion.ofAssn
+        (Assn.ofState ((bkUnitary x : EndM (QubitD (2 ^ x)) univ) ψ)
+          (norm_eq_one_of_isUnitary (bkUnitary x).isUnitary hψ)) (fun _ => True)) := by
+  apply SourceDerivTot.countedStateChainVar (CounterLens.fst ℕ) (fun _ => x)
+    (fun _ => True) (fun _ _ => Iff.rfl) (fun _ _ => rfl)
+    (fun k _ => coherentAt x ψ k) (fun k _ => norm_coherentAt x ψ hψ k)
+    (hv₀ := fun _ => hψ)
+    (hv₁ := fun _ => norm_eq_one_of_isUnitary (bkUnitary x).isUnitary hψ)
+    (fun _ _ _ => rfl) (fun _ _ => rfl)
+    (fun _ _ => congrArg (fun A : EndM (QubitD (2 ^ x)) univ => A ψ)
+      (bkCircuitOp_eq_bkUnitary x))
+  · exact coherent_levelSource x ψ hψ (fun i => True ∧ i < x)
+  · intro z
+    exact levelIdentitySource x (fun i => True ∧ i < x ∧ (↑(x - i) : Int) = z)
+
+theorem bkCoherentSourceValid :
+    validTot (Assn.ofState ψ hψ) (bkProg x)
+      (Assn.ofState ((bkUnitary x : EndM (QubitD (2 ^ x)) univ) ψ)
+        (norm_eq_one_of_isUnitary (bkUnitary x).isUnitary hψ)) := by
+  simpa only [SourceAssertion.toAssn_ofAssn_true] using (bkCoherentSourceDeriv x ψ hψ).sound
+end Qhl.BKTransform
+
+#print axioms Qhl.BKTransform.bkCircuitOp_eq_bkUnitary
+#print axioms Qhl.BKTransform.bkCoherentSourceDeriv
+#print axioms Qhl.BKTransform.bkCoherentSourceValid
+
+namespace Qhl.BKTransform
+open Finset
+
+theorem midOp_eq_chainOp_range (x l k : ℕ) :
+    midOp x l k = chainOp (List.range k) (rungOp x l) := by
+  induction k with
+  | zero => rfl
+  | succ k ih => rw [midOp, List.range_succ, chainOp_concat, ih]
+
+theorem atOp_eq_chainOp_range (x l : ℕ) :
+    atOp x l = chainOp (List.range l) (levelOp x) := by
+  induction l with
+  | zero => rfl
+  | succ l ih => rw [atOp, List.range_succ, chainOp_concat, ih]
+end Qhl.BKTransform

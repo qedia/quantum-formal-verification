@@ -52,9 +52,9 @@ separate entry point, `Qhl.Tests`.
 | Bounded Repeat-Until-Success | `BoundedRUSTriple`, `RUSZeroBound` |
 | Trotter product formula with approximation error | `TrotterTFIMClassicalTriple`, `TrotterTFIMTriple` |
 | Cluster-state preparation | `ClusterStateTriple` |
-| Bravyi–Kitaev encoding | `BKTransformTriple` |
-| Fermi–Hubbard LCU block encoding | `HubbardLCUTriple`, `HubbardLCUSuccess` |
-| Fermi–Hubbard QSP simulation | `HubbardQSPTriple`, `HubbardQSPSuccess` |
+| Bravyi–Kitaev encoding | `BKTransformTriple`, `BKTransformWp` |
+| Fermi–Hubbard LCU block encoding | `HubbardLCUTriple`, `HubbardLCUPredicate`, `HubbardExactExpectation` |
+| Fermi–Hubbard QSP polynomial transformation | `HubbardQSPBK`, `HubbardQSPSpectral`, `HubbardExactExpectation` |
 
 For example, to build only the bounded RUS example:
 

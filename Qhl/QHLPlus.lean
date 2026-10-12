@@ -83,5 +83,9 @@ import Qhl.Program.State
 import Qhl.Program.Step
 import Qhl.Program.StoreLens
 import Qhl.Program.Syntax
+import Qhl.Logic.ExactExpectation
+import Qhl.Logic.SysLiftRegister
+import Qhl.Logic.WpSuffixCongr
+import Qhl.Logic.Source.Nonvacuity
 
 /-! Program semantics, QHL+ proof systems, soundness, and reusable proof lemmas. -/

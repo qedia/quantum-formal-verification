@@ -33,5 +33,14 @@ import Qhl.Examples.TrotterIsingTriple
 import Qhl.Examples.TrotterTFIMClassicalTriple
 import Qhl.Examples.TrotterTFIMTriple
 import Qhl.Examples.TrotterZTriple
+import Qhl.Examples.BKTransformWp
+import Qhl.Examples.HubbardQSPBK
+import Qhl.Examples.HubbardExactExpectation
+import Qhl.Examples.HubbardLCUFullPredicate
+import Qhl.Examples.HubbardQSPFullPredicate
+import Qhl.Examples.HubbardQSPSpectral
+import Qhl.Examples.HubbardQSPNonvacuity
+import Qhl.Examples.Nonvacuity
+import Qhl.Examples.NonvacuityVariants
 
 /-! Verified quantum-program examples. -/
